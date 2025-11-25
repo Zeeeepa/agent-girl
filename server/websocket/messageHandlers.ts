@@ -20,6 +20,8 @@ import { parseApiError, getUserFriendlyMessage } from "../utils/apiErrors";
 import { TimeoutController } from "../utils/timeout";
 import { sessionStreamManager } from "../sessionStreamManager";
 import { expandSlashCommand } from "../slashCommandExpander";
+import os from "os";
+import path from "path";
 
 interface ChatWebSocketData {
   type: 'hot-reload' | 'chat';
@@ -311,11 +313,15 @@ Run bash commands with the understanding that this is your current working direc
     const estimatedTokens = Math.round(promptWordCount * 1.3);
     console.log(`📏 System prompt size: ${promptWordCount} words (~${estimatedTokens} tokens)`);
 
-    // Debug: Write full system prompt to temp file for inspection
-    const fs = await import('fs');
-    const debugPath = `/tmp/system-prompt-${session.mode || 'general'}-debug.txt`;
-    fs.writeFileSync(debugPath, systemPromptWithContext);
-    console.log(`📝 Full system prompt written to: ${debugPath}`);
+    // Debug: Write full system prompt to temp file for inspection (cross-platform)
+    try {
+      const fs = await import('fs');
+      const debugPath = path.join(os.tmpdir(), `system-prompt-${session.mode || 'general'}-debug.txt`);
+      fs.writeFileSync(debugPath, systemPromptWithContext);
+      console.log(`📝 Full system prompt written to: ${debugPath}`);
+    } catch (error) {
+      console.warn(`⚠️ Could not write debug file to temp directory:`, error);
+    }
 
     // Inject working directory context into all custom agent prompts
     const agentsWithWorkingDir = injectWorkingDirIntoAgents(AGENT_REGISTRY, workingDir);
