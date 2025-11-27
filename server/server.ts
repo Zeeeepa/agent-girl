@@ -96,8 +96,11 @@ if (!IS_STANDALONE) {
   });
 }
 
+// Support PORT environment variable with 3001 as default
+const PORT = Number(process.env.PORT) || 3001;
+
 const server = Bun.serve({
-  port: 3001,
+  port: PORT,
   idleTimeout: 255, // 4.25 minutes (Bun's maximum) - keepalive messages every 30s prevent timeout
 
   websocket: {
